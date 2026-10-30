@@ -4,7 +4,7 @@
 **Location:** GIX GPU cluster: 1 controller and 5 GPU nodes, each with an RTX 5090
 **Scope:** Slurm, rootless Podman, VS Code access, `gix` command-line tool, student and IT staff docs, reliability testing
 **Status:** 🟡 In progress. Students can run jobs, and reliability testing is still under way
-**Time:** 3 shifts, 8 hours each, 24 hours in total. Logs and commits show about 13.5 hours of that directly (see [Time Spent](#time-spent))
+**Time:** 3 shifts, 8 hours each, 24 hours in total. Logs and commits show about 14.25 hours of that directly (see [Time Spent](#time-spent))
 **Tools:** Worked with Claude Code. Root changes on the cluster were run with admin approval
 
 ---
@@ -38,8 +38,8 @@ gix download lerobot-act/outputs
 | --- | --- | --- | --- |
 | Fri 2026-10-16 | Devcontainer rollout, first SSSD incident, VS Code extension | 8 h | About 3 h (09:45–12:53) |
 | Fri 2026-10-23 | SSSD fix, `gix` tool, student repo, examples, first admin guide | 8 h | About 3.5 h (11:17–14:54) |
-| Fri 2026-10-30 | LeRobot fix, guides, IT staff doc, reliability testing | 8 h | About 6.75 h (09:15–16:00, planned) |
-| **Total** | | **24 h** | **About 13.5 h** |
+| Fri 2026-10-30 | LeRobot fix, guides, IT staff doc, reliability testing, Microduck | 8 h | About 7.75 h (09:15–17:00, planned) |
+| **Total** | | **24 h** | **About 14.25 h** |
 
 The log figure is only what timestamps can prove. It doesn't cover planning, meetings, testing from my laptop, or other work during the shift.
 
@@ -82,12 +82,14 @@ The log figure is only what timestamps can prove. It doesn't cover planning, mee
 4. **Student docs:** rewrote the LeRobot section step by step, fixed the checkpoint path, and added a "Which way should I train?" section.
 5. **IT staff doc:** wrote a guide focused on monitoring, maintenance and troubleshooting.
 6. **Reliability testing:** see below.
+7. **Microduck robot training:** ran `pollen-robotics/microduck_rl` in a rootless container, recorded a video, and viewed the simulation live in a browser on a Mac. A longer training run started at 15:05. Whether the robot walks well isn't proven yet.
+8. **Student guide:** added what the tests found: missing tools, resuming from a checkpoint, tested LeRobot policies, `--mem`, and new troubleshooting entries.
 
 ---
 
 ## Reliability Test Results
 
-As of 13:20 on 2026-10-30. Tests ran on free nodes only, with a test account and time limits.
+As of 15:25 on 2026-10-30. Tests ran on free nodes only, with a test account and time limits.
 
 | Test | Result | Notes |
 | --- | --- | --- |
@@ -113,8 +115,13 @@ As of 13:20 on 2026-10-30. Tests ran on free nodes only, with a test account and
 | TD-MPC | ❌ | Not a cluster problem: it only accepts square images, and this dataset is 640x480 |
 | pi0.5 fine-tune | ❌ | Needs Hugging Face access to the gated PaliGemma tokenizer |
 | 10 rounds of LeRobot and CIFAR-10 | ✅ | 20 of 20 jobs completed, with steady run times |
-| 3-hour shard job | ⏳ | Running until about 15:50 |
-| Short soak on one node | ⏳ | Repeating LeRobot and CIFAR-10 jobs until 15:40 |
+| Long shard job, planned for 3 hours | ✅ | Ran 2 h 31 min, about 338,000 steps at a steady 39 steps/s, max 70 C. Stopped as designed when a real user needed the node, and their job started right away |
+| Short soak on one node | ✅ ⚠️ | 26 of 26 jobs completed before it was stopped early to free the GPU. One CIFAR-10 job took 10 minutes instead of about 18 seconds, stuck in `pip install` |
+| README `git` recipe | ✅ | Fails without it, works with it in 23 seconds |
+| Microduck RL, 4,096 robots, 100 iterations | ✅ | Rootless container in Slurm: about 120,000 steps/s, 5.6 GB GPU memory |
+| Microduck video from a job | ✅ | 10-second MP4 downloaded to a Mac. Needed `libEGL` added first |
+| Microduck live in a browser | ✅ ⚠️ | Viser through an SSH tunnel, smooth on a Mac with nothing installed. The port is open without a password, so it isn't ready for students |
+| Microduck long run, 8,192 robots, 6,000 iterations | ⏳ | Running, about 131,000 steps/s, expected to end around 17:37. It stops early if a student needs the GPU |
 
 **Not tested yet:**
 
@@ -141,7 +148,10 @@ As of 13:20 on 2026-10-30. Tests ran on free nodes only, with a test account and
 | pi0.5 downloads about 14 GB, then fails without access | Slow failure, and NAS space used per project | Document it, and check access early |
 | `gix upload` always sends the whole folder | Slow with large datasets | Use `rsync` |
 | No sample LeRobot dataset | Students without data can't try it | Add a small one, if it's OK to share |
-| Podman `level=error` line in some logs, on jobs that still ran | Can confuse students | Add to troubleshooting |
+| Podman `level=error` line in some logs, on jobs that still ran | Can confuse students | Added to troubleshooting |
+| Slow route to PyPI: about 150 KB/s, against about 6 MB/s for Hugging Face (one measurement) | Package installs can stall and hold a GPU, and may explain the 10-minute job | Measure again, then review the network or add a package cache |
+| PyTorch image has no `git` or `libEGL` | GitHub dependencies and headless rendering fail | Documented in the student guide |
+| Browser viewer port has no password | Anyone who can reach the node can open it | Secure it before offering it to students |
 | NAS credential handling | Needs tightening | Tracked separately by IT |
 
 ---
@@ -150,6 +160,7 @@ As of 13:20 on 2026-10-30. Tests ran on free nodes only, with a test account and
 
 - Pin container images. `:latest` changed between one test and the next, and it would have broken the example for every student.
 - Test as a student would. Running the published steps from a laptop showed problems that testing on the server didn't.
+- More isn't always faster. Doubling Microduck from 4,096 to 8,192 robots only raised speed from about 120,000 to 131,000 steps/s.
 - Other users come first during testing. Use free nodes only, set time limits, and give way when someone is waiting.
 - One test script tried to cancel a real user's job by mistake. `gix` refused it and nothing was affected, but test scripts should only ever use the test account's own jobs.
 
