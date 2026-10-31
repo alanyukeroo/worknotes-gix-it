@@ -82,14 +82,14 @@ The log figure is only what timestamps can prove. It doesn't cover planning, mee
 4. **Student docs:** rewrote the LeRobot section step by step, fixed the checkpoint path, and added a "Which way should I train?" section.
 5. **IT staff doc:** wrote a guide focused on monitoring, maintenance and troubleshooting.
 6. **Reliability testing:** see below.
-7. **Microduck robot training:** ran `pollen-robotics/microduck_rl` in a rootless container, recorded a video, and viewed the simulation live in a browser on a Mac. A longer training run started at 15:05. Whether the robot walks well isn't proven yet.
+7. **Microduck robot training:** ran `pollen-robotics/microduck_rl` in a rootless container, recorded a video, and viewed the simulation live in a browser on a Mac. A longer training run finished at 17:48. In its 10-second simulated video, the robot stays upright and moves. It hasn't been tested on a real robot.
 8. **Student guide:** added what the tests found: missing tools, resuming from a checkpoint, tested LeRobot policies, `--mem`, and new troubleshooting entries.
 
 ---
 
 ## Reliability Test Results
 
-As of 15:25 on 2026-10-30. Tests ran on free nodes only, with a test account and time limits.
+As of 17:50 on 2026-10-30. Tests ran on free nodes only, with a test account and time limits.
 
 | Test | Result | Notes |
 | --- | --- | --- |
@@ -99,7 +99,7 @@ As of 15:25 on 2026-10-30. Tests ran on free nodes only, with a test account and
 | Own code from the template | ✅ | GPU, `requirements.txt` and data folder all worked |
 | LeRobot ACT, full 50,000 steps | ✅ | About 25 minutes; checkpoint reached the NAS during the run |
 | Job passes its time limit | ✅ ⚠️ | Stops cleanly, but work since the last checkpoint is lost |
-| Resume from a checkpoint | ✅ ⚠️ | Works, but isn't in the student guide yet |
+| Resume from a checkpoint | ✅ | Works, and is now in the student guide |
 | Four jobs on one GPU | ✅ | About 12 steps/s each, compared with 26–37 alone |
 | `gix cancel` during training | ✅ | Other jobs carried on |
 | More jobs than GPU shares | ✅ | Extra jobs queued and finished on their own |
@@ -121,7 +121,7 @@ As of 15:25 on 2026-10-30. Tests ran on free nodes only, with a test account and
 | Microduck RL, 4,096 robots, 100 iterations | ✅ | Rootless container in Slurm: about 120,000 steps/s, 5.6 GB GPU memory |
 | Microduck video from a job | ✅ | 10-second MP4 downloaded to a Mac. Needed `libEGL` added first |
 | Microduck live in a browser | ✅ ⚠️ | Viser through an SSH tunnel, smooth on a Mac with nothing installed. The port is open without a password, so it isn't ready for students |
-| Microduck long run, 8,192 robots, 6,000 iterations | ⏳ | Running, about 131,000 steps/s, expected to end around 17:37. It stops early if a student needs the GPU |
+| Microduck long run, 8,192 robots, 6,000 iterations | ✅ | Finished in 2 h 42 min with no errors, at about 131,000 steps/s. Mean reward rose from -0.06 to 127.5, and about 5% of episodes ended in a fall over the last 300 iterations. Reward was already 126.6 by iteration 750, so a much shorter run may be enough |
 
 **Not tested yet:**
 
